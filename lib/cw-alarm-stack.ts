@@ -1,6 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatch_actions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export class CwAlarmStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -27,6 +33,19 @@ export class CwAlarmStack extends cdk.Stack {
       alarmDescription: 'API Gateway request count exceeds threshold',
       alarmName: 'ApiGatewayCountAlarm',
     });
+
+    // SNSトピックを作成
+    const topic = new sns.Topic(this, 'AlarmNotificationTopic');
+
+    const email = process.env.EMAIL;
+    if (!email) {
+      throw new Error('EMAIL environment variable is not set');
+    }
+    // メールアドレスをSNSトピックにサブスクライブ
+    topic.addSubscription(new subscriptions.EmailSubscription(email));
+
+    // // アラームの状態変更時にSNSトピックにメッセージを公開するアクションを追加
+    alarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
   }
 }
 
