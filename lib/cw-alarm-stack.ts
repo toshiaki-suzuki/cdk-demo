@@ -5,6 +5,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as dotenv from 'dotenv';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 dotenv.config();
 
@@ -12,10 +13,17 @@ export class CwAlarmStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // Lambda関数を作成
+    const hello = new lambda.Function(this, 'HelloHandler', {
+      runtime: lambda.Runtime.NODEJS_LATEST,    // execution environment
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'hello.handler'                // file is "hello", function is "handler"
+    });
+
     // 既存のAPI Gatewayを取得
     const api = new apigateway.RestApi(this, 'alarm-count-api');
     const stage = api.deploymentStage;
-    const method = api.root.addMethod('GET');
+    const method = api.root.addMethod('GET', new apigateway.LambdaIntegration(hello));
 
     const metricsOptions = {
       period: cdk.Duration.minutes(5),
@@ -44,7 +52,7 @@ export class CwAlarmStack extends cdk.Stack {
     // メールアドレスをSNSトピックにサブスクライブ
     topic.addSubscription(new subscriptions.EmailSubscription(email));
 
-    // // アラームの状態変更時にSNSトピックにメッセージを公開するアクションを追加
+    // アラームの状態変更時にSNSトピックにメッセージを公開するアクションを追加
     alarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
   }
 }
