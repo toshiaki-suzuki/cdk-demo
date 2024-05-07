@@ -42,6 +42,40 @@ export class CwAlarmStack extends cdk.Stack {
       alarmName: 'ApiGatewayCountAlarm',
     });
 
+    const lambdaErrorsAlarm = new cloudwatch.Alarm(this, 'LambdaAlarm', {
+      metric: hello.metricInvocations({
+        period: cdk.Duration.minutes(5),
+        statistic: 'Sum'
+      }),
+      threshold: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      evaluationPeriods: 5,
+      alarmDescription: 'Lambda invocation count exceeds threshold',
+      alarmName: 'LambdaInvocationAlarm',
+    });
+
+
+    // Lambda関数のスロットル回数が1回以上の場合にアラームを作成
+    const lambdaThrottlesAlarm = new cloudwatch.Alarm(this, 'LambdaThrottlesAlarm', {
+      metric: hello.metricThrottles(),
+      threshold: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      evaluationPeriods: 5,
+      alarmDescription: 'Lambda throttles count exceeds threshold',
+      alarmName: 'LambdaThrottlesAlarm',
+    });
+
+
+    // Lambda関数の実行時間が60秒以上の場合にアラームを作成
+    const lambdaDurationAlarm = new cloudwatch.Alarm(this, 'LambdaDurationAlarm', {
+      metric: hello.metricDuration(),
+      threshold: 60,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      evaluationPeriods: 5,
+      alarmDescription: 'Lambda duration exceeds threshold',
+      alarmName: 'LambdaDurationAlarm',
+    });
+
     // SNSトピックを作成
     const topic = new sns.Topic(this, 'AlarmNotificationTopic');
 
