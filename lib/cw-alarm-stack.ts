@@ -37,7 +37,7 @@ export class CwAlarmStack extends cdk.Stack {
       metric: countMetrics,
       threshold: 1,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      evaluationPeriods: 1,
+      evaluationPeriods: 5,
       alarmDescription: 'API Gateway request count exceeds threshold',
       alarmName: 'ApiGatewayCountAlarm',
     });
