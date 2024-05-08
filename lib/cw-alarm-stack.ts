@@ -31,9 +31,10 @@ export class CwAlarmStack extends cdk.Stack {
     };
 
     const countMetrics = api.metric('Count', metricsOptions);
+    const topic = new sns.Topic(this, 'AlarmNotificationTopic');
 
     // CloudWatchAlarmを作成
-    const alarm = new cloudwatch.Alarm(this, 'ApiGatewayAlarm', {
+    const apigwErrorsAlarm = new cloudwatch.Alarm(this, 'ApiGatewayAlarm', {
       metric: countMetrics,
       threshold: 1,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
@@ -41,6 +42,8 @@ export class CwAlarmStack extends cdk.Stack {
       alarmDescription: 'API Gateway request count exceeds threshold',
       alarmName: 'ApiGatewayCountAlarm',
     });
+
+    apigwErrorsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
 
     const lambdaErrorsAlarm = new cloudwatch.Alarm(this, 'LambdaAlarm', {
       metric: hello.metricInvocations({
@@ -54,6 +57,8 @@ export class CwAlarmStack extends cdk.Stack {
       alarmName: 'LambdaInvocationAlarm',
     });
 
+    lambdaErrorsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
+
 
     // Lambda関数のスロットル回数が1回以上の場合にアラームを作成
     const lambdaThrottlesAlarm = new cloudwatch.Alarm(this, 'LambdaThrottlesAlarm', {
@@ -64,6 +69,8 @@ export class CwAlarmStack extends cdk.Stack {
       alarmDescription: 'Lambda throttles count exceeds threshold',
       alarmName: 'LambdaThrottlesAlarm',
     });
+
+    lambdaThrottlesAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
 
 
     // Lambda関数の実行時間が60秒以上の場合にアラームを作成
@@ -76,8 +83,7 @@ export class CwAlarmStack extends cdk.Stack {
       alarmName: 'LambdaDurationAlarm',
     });
 
-    // SNSトピックを作成
-    const topic = new sns.Topic(this, 'AlarmNotificationTopic');
+    lambdaDurationAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
 
     const email = process.env.EMAIL;
     if (!email) {
@@ -87,7 +93,7 @@ export class CwAlarmStack extends cdk.Stack {
     topic.addSubscription(new subscriptions.EmailSubscription(email));
 
     // アラームの状態変更時にSNSトピックにメッセージを公開するアクションを追加
-    alarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
+    apigwErrorsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
   }
 }
 
