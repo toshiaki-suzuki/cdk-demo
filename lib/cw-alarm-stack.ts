@@ -22,8 +22,8 @@ export class CwAlarmStack extends cdk.Stack {
 
     // 既存のAPI Gatewayを取得
     const api = new apigateway.RestApi(this, 'alarm-count-api');
-    const stage = api.deploymentStage;
-    const method = api.root.addMethod('GET', new apigateway.LambdaIntegration(hello));
+    api.deploymentStage;
+    api.root.addMethod('GET', new apigateway.LambdaIntegration(hello));
 
     const metricsOptions = {
       period: cdk.Duration.minutes(5),
