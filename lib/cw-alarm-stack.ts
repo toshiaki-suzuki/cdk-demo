@@ -75,10 +75,14 @@ export class CwAlarmStack extends cdk.Stack {
 
     // Lambda関数の実行時間が60秒以上の場合にアラームを作成
     const lambdaDurationAlarm = new cloudwatch.Alarm(this, 'LambdaDurationAlarm', {
-      metric: hello.metricDuration(),
+      metric: hello.metricDuration({
+        period: cdk.Duration.minutes(1),
+        statistic: 'Average'
+      }),
       threshold: 60,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
       evaluationPeriods: 5,
+      datapointsToAlarm: 5,
       alarmDescription: 'Lambda duration exceeds threshold',
       alarmName: 'LambdaDurationAlarm',
     });
@@ -94,6 +98,9 @@ export class CwAlarmStack extends cdk.Stack {
 
     // アラームの状態変更時にSNSトピックにメッセージを公開するアクションを追加
     apigwErrorsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
+
+
+
   }
 }
 
