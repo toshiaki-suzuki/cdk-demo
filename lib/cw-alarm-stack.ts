@@ -77,7 +77,11 @@ export class CwAlarmStack extends cdk.Stack {
     const lambdaDurationAlarm = new cloudwatch.Alarm(this, 'LambdaDurationAlarm', {
       metric: hello.metricDuration({
         period: cdk.Duration.minutes(1),
-        statistic: 'Average'
+        statistic: 'Average',
+        dimensionsMap: {
+          Resource: 'Function',
+          FunctionName: 'HelloHandler',
+        }
       }),
       threshold: 60,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
@@ -98,8 +102,6 @@ export class CwAlarmStack extends cdk.Stack {
 
     // アラームの状態変更時にSNSトピックにメッセージを公開するアクションを追加
     apigwErrorsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(topic));
-
-
 
   }
 }
