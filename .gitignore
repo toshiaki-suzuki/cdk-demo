@@ -7,6 +7,11 @@ node_modules
 .cdk.staging
 cdk.out
 
+# Ignore the CDK cdk.json file
 lambda/*.js
 
+# Ignore the CDK asset metadata file
 .env
+
+# Ignore the CDK context file
+cdk.context.json
